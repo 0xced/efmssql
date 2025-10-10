@@ -1,0 +1,1 @@
+The goal of this project is to reproduce and workaround an old and still unaddressed SqlClient issue: [Cancelling an async SqlClient operation throws SqlException, not TaskCanceledException](https://github.com/dotnet/SqlClient/issues/26)
