@@ -3,7 +3,6 @@ using System.Linq;
 using Database;
 using efmssql;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using Spectre.Console;
 
 var sqlContainer = await AnsiConsole.Status()
@@ -12,16 +11,25 @@ var sqlContainer = await AnsiConsole.Status()
 
 AnsiConsole.WriteLine($"🛢 SQL Server database available on {sqlContainer.ConnectionString}");
 
-// 2 ms after ReaderExecutingAsync is a good timing to get an exception that is not TaskCanceledException: A task was canceled.
-var interceptor = new DbCommandInterceptor(cancelDelay: 2);
+var useWorkaround = !args.Contains("--no-workaround");
+var ensureCreated = !args.Contains("--skip-init");
+
+var cancelDelay = ensureCreated ? 2 : 5;
+AnsiConsole.WriteLine($"⏱️ Canceling after {cancelDelay} ms");
+if (useWorkaround)
+{
+    AnsiConsole.WriteLine($"✳️ Using issue #26 workaround ({nameof(FixSqlClientIssue26ExecutionStrategy)})");
+}
+
+// A few ms after ReaderExecutingAsync is a good timing to get an exception that is not TaskCanceledException: A task was canceled.
+var interceptor = new DbCommandInterceptor(cancelDelay);
 var cancellationToken = interceptor.CancellationToken;
 var optionsBuilder = new DbContextOptionsBuilder<ChinookContext>()
     .AddInterceptors(interceptor)
-    .ReplaceService<IExecutionStrategyFactory, FixSqlClientIssue26ExecutionStrategyFactory>()
-    .UseSqlServer(sqlContainer.ConnectionString);
+    .UseSqlServer(sqlContainer.ConnectionString, useWorkaround ? sql => sql.ExecutionStrategy(FixSqlClientIssue26ExecutionStrategy.Create) : null);
 
 await using var context = new ChinookContext(optionsBuilder.Options);
-if (!args.Contains("--skip-init"))
+if (ensureCreated)
 {
     // Without "initializing things" (dotnet run -- --skip-init) => System.InvalidOperationException: Operation cancelled by user.
     // When "initializing things" upfront (_ = await context.Database.EnsureCreatedAsync()) => Microsoft.Data.SqlClient.SqlException (0x80131904): A severe error occurred on the current command.  The results, if any, should be discarded.

@@ -9,36 +9,33 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace efmssql;
 
 [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.")]
-public class FixSqlClientIssue26ExecutionStrategyFactory(ExecutionStrategyDependencies dependencies) : SqlServerExecutionStrategyFactory(dependencies)
+public class FixSqlClientIssue26ExecutionStrategy(ExecutionStrategyDependencies dependencies) : SqlServerExecutionStrategy(dependencies)
 {
-    protected override IExecutionStrategy CreateDefaultStrategy(ExecutionStrategyDependencies dependencies) => new Strategy(dependencies);
+    private static readonly string OperationCanceledMessage = "The operation was canceled.";
 
-    private class Strategy(ExecutionStrategyDependencies dependencies) : SqlServerExecutionStrategy(dependencies)
+    static FixSqlClientIssue26ExecutionStrategy()
     {
-        private static readonly string OperationCanceledMessage = "The operation was canceled.";
-
-        static Strategy()
+        try
         {
-            try
-            {
-                new CancellationToken(canceled: true).ThrowIfCancellationRequested();
-            }
-            catch (OperationCanceledException exception)
-            {
-                OperationCanceledMessage = exception.Message;
-            }
+            new CancellationToken(canceled: true).ThrowIfCancellationRequested();
         }
-
-        public override async Task<TResult> ExecuteAsync<TState, TResult>(TState state, Func<DbContext, TState, CancellationToken, Task<TResult>> operation, Func<DbContext, TState, CancellationToken, Task<ExecutionResult<TResult>>>? verifySucceeded, CancellationToken cancellationToken)
+        catch (OperationCanceledException exception)
         {
-            try
-            {
-                return await base.ExecuteAsync(state, operation, verifySucceeded, cancellationToken);
-            }
-            catch (Exception exception) when (exception is not OperationCanceledException && cancellationToken.IsCancellationRequested)
-            {
-                throw new OperationCanceledException(OperationCanceledMessage, exception, cancellationToken);
-            }
+            OperationCanceledMessage = exception.Message;
+        }
+    }
+
+    public static IExecutionStrategy Create(ExecutionStrategyDependencies dependencies) => new FixSqlClientIssue26ExecutionStrategy(dependencies);
+
+    public override async Task<TResult> ExecuteAsync<TState, TResult>(TState state, Func<DbContext, TState, CancellationToken, Task<TResult>> operation, Func<DbContext, TState, CancellationToken, Task<ExecutionResult<TResult>>>? verifySucceeded, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await base.ExecuteAsync(state, operation, verifySucceeded, cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException && cancellationToken.IsCancellationRequested)
+        {
+            throw new OperationCanceledException(OperationCanceledMessage, exception, cancellationToken);
         }
     }
 }
