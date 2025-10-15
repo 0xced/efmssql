@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using Database;
 using efmssql;
@@ -12,8 +12,8 @@ var sqlContainer = await AnsiConsole.Status()
 
 AnsiConsole.WriteLine($"🛢 SQL Server database available on {sqlContainer.ConnectionString}");
 
-// 5 ms after ReaderExecutingAsync is a good timing to get an exception that is not TaskCanceledException: A task was canceled.
-var interceptor = new DbCommandInterceptor(cancelDelay: 5);
+// 2 ms after ReaderExecutingAsync is a good timing to get an exception that is not TaskCanceledException: A task was canceled.
+var interceptor = new DbCommandInterceptor(cancelDelay: 2);
 var cancellationToken = interceptor.CancellationToken;
 var optionsBuilder = new DbContextOptionsBuilder<ChinookContext>()
     .AddInterceptors(interceptor)
