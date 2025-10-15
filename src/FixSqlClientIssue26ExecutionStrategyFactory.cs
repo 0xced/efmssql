@@ -15,18 +15,19 @@ public class FixSqlClientIssue26ExecutionStrategyFactory(ExecutionStrategyDepend
 
     private class Strategy(ExecutionStrategyDependencies dependencies) : SqlServerExecutionStrategy(dependencies)
     {
-        private static readonly Lazy<string> OperationCanceledMessage = new(() =>
+        private static readonly string OperationCanceledMessage = "The operation was canceled.";
+
+        static Strategy()
         {
             try
             {
                 new CancellationToken(canceled: true).ThrowIfCancellationRequested();
-                return "The operation was canceled.";
             }
             catch (OperationCanceledException exception)
             {
-                return exception.Message;
+                OperationCanceledMessage = exception.Message;
             }
-        });
+        }
 
         public override async Task<TResult> ExecuteAsync<TState, TResult>(TState state, Func<DbContext, TState, CancellationToken, Task<TResult>> operation, Func<DbContext, TState, CancellationToken, Task<ExecutionResult<TResult>>>? verifySucceeded, CancellationToken cancellationToken)
         {
@@ -36,7 +37,7 @@ public class FixSqlClientIssue26ExecutionStrategyFactory(ExecutionStrategyDepend
             }
             catch (Exception exception) when (exception is not OperationCanceledException && cancellationToken.IsCancellationRequested)
             {
-                throw new OperationCanceledException(OperationCanceledMessage.Value, exception, cancellationToken);
+                throw new OperationCanceledException(OperationCanceledMessage, exception, cancellationToken);
             }
         }
     }
