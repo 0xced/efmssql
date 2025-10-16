@@ -3,6 +3,7 @@ using System.Linq;
 using Database;
 using efmssql;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Spectre.Console;
 
 var sqlContainer = await AnsiConsole.Status()
@@ -22,10 +23,11 @@ if (useWorkaround)
 }
 
 // A few ms after ReaderExecutingAsync is a good timing to get an exception that is not TaskCanceledException: A task was canceled.
-var interceptor = new DbCommandInterceptor(cancelDelay);
+var interceptor = new CancellationInterceptor(cancelDelay);
 var cancellationToken = interceptor.CancellationToken;
 var optionsBuilder = new DbContextOptionsBuilder<ChinookContext>()
     .AddInterceptors(interceptor)
+    .LogTo(AnsiConsole.WriteLine, [CoreEventId.QueryCanceled, CoreEventId.QueryIterationFailed])
     .UseSqlServer(sqlContainer.ConnectionString, useWorkaround ? sql => sql.ExecutionStrategy(FixSqlClientIssue26ExecutionStrategy.Create) : null);
 
 await using var context = new ChinookContext(optionsBuilder.Options);

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace efmssql;
 
-public class DbCommandInterceptor(int? cancelDelay) : IDbCommandInterceptor
+public class CancellationInterceptor(int? cancelDelay) : IDbCommandInterceptor
 {
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
