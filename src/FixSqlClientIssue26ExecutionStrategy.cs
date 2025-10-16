@@ -8,6 +8,10 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace efmssql;
 
+/// <summary>
+/// An execution strategy that wraps any exception that occurs when cancellation is requested into an <see cref="OperationCanceledException"/>.
+/// This works around <see href="https://github.com/dotnet/SqlClient/issues/26">SqlClient issue #26: Cancelling an async SqlClient operation throws SqlException, not TaskCanceledException</see>.
+/// </summary>
 [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.")]
 public class FixSqlClientIssue26ExecutionStrategy(ExecutionStrategyDependencies dependencies) : SqlServerExecutionStrategy(dependencies)
 {
