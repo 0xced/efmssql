@@ -25,7 +25,7 @@
   <!-- Run `dotnet pack -p:GenerateCompatibilitySuppressionFile=true` to accept breaking changes
        See https://docs.microsoft.com/en-us/dotnet/fundamentals/package-validation/overview for more information -->
   <PropertyGroup Label="API Validation">
-    <EnablePackageValidation>false</EnablePackageValidation>
+    <EnablePackageValidation>true</EnablePackageValidation>
     <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
   </PropertyGroup>
 
