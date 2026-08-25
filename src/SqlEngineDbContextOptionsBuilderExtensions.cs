@@ -11,10 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace Microsoft.EntityFrameworkCore;
 
 /// <summary>
-/// Provides extension methods for <see cref="SqlServerDbContextOptionsBuilder"/>.
+/// Provides extension methods for <see cref="SqlEngineDbContextOptionsBuilderBase{T}"/>.
 /// </summary>
 [SuppressMessage("Usage", "EF1001:Internal EF Core API usage.", Justification = "Required to workaround SqlClient issue #26")]
-public static class SqlServerDbContextOptionsBuilderWorkaroundSqlClientIssue26Extensions
+public static class SqlEngineDbContextOptionsBuilderWorkaroundSqlClientIssue26Extensions
 {
     /// <summary>
     /// Installs an execution strategy that wraps any exception that occurs when cancellation is requested into an <see cref="OperationCanceledException"/>.
@@ -24,7 +24,8 @@ public static class SqlServerDbContextOptionsBuilderWorkaroundSqlClientIssue26Ex
     /// Unlike other <see cref="SqlServerDbContextOptionsBuilder"/> methods, this one can't be chained. This is on purpose, as it properly handles if another execution strategy was already configured.
     /// For example, calling <c>builder.EnableRetryOnFailure().WorkAroundSqlClientIssue26()</c> will properly install both the retrying strategy and the workaround strategy.
     /// </remarks>
-    public static void WorkAroundSqlClientIssue26(this SqlServerDbContextOptionsBuilder builder)
+    public static void WorkAroundSqlClientIssue26<T>(this SqlEngineDbContextOptionsBuilderBase<T> builder)
+        where T : SqlEngineDbContextOptionsBuilderBase<T>
     {
         ArgumentNullException.ThrowIfNull(builder);
         var optionsBuilder = ((IRelationalDbContextOptionsBuilderInfrastructure)builder).OptionsBuilder;

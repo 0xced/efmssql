@@ -10,7 +10,7 @@ using Xunit.Sdk;
 
 namespace WorkaroundSqlClientIssue26.Tests;
 
-public partial class MsSqlFixture(IMessageSink messageSink) : ContainerFixture<MsSqlBuilder, MsSqlContainer>(messageSink)
+public class MsSqlFixture(IMessageSink messageSink) : ContainerFixture<MsSqlBuilder, MsSqlContainer>(messageSink)
 {
     private static readonly HttpClient HttpClient = new();
 
@@ -19,7 +19,7 @@ public partial class MsSqlFixture(IMessageSink messageSink) : ContainerFixture<M
     protected override MsSqlBuilder Configure()
     {
         var targetFramework = typeof(MsSqlFixture).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(e => e.Key == "TargetFramework")?.Value ?? "NA";
-        return new MsSqlBuilder("mcr.microsoft.com/mssql/server:2025-latest").WithReuse(true).WithName($"WorkaroundSqlClientIssue26.Tests-{targetFramework}");
+        return new MsSqlBuilder("mcr.microsoft.com/mssql/server:2025-latest").WithReuse(true).WithName($"WorkaroundSqlClientIssue26.Tests.{GetType().Name}-{targetFramework}");
     }
 
     protected override async ValueTask InitializeAsync()

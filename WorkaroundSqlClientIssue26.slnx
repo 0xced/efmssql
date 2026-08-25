@@ -19,8 +19,6 @@
   <Folder Name="/tests/">
     <File Path="tests/Directory.Build.props" />
     <File Path="tests/Directory.Build.targets" />
-    <Project Path="tests/EF8/WorkaroundSqlClientIssue26.EF8.Tests.csproj" />
-    <Project Path="tests/EF9/WorkaroundSqlClientIssue26.EF9.Tests.csproj" />
     <Project Path="tests/EF10/WorkaroundSqlClientIssue26.EF10.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
