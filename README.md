@@ -43,10 +43,20 @@ var options = new DbContextOptionsBuilder<MyDbContext>()
   .Options;
 ```
 
+Since version 2.0.0, it is also compatible with [Azure SQL](https://learn.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.sqlserverdbcontextoptionsextensions.useazuresql) and [Azure Synapse](https://learn.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.sqlserverdbcontextoptionsextensions.useazuresynapse).
+
+```c#
+var options = new DbContextOptionsBuilder<MyDbContext>()
+  .UseAzureSql(connectionString, s => s.WorkAroundSqlClientIssue26())
+  .Options;
+```
+
 ## Frequently Asked Questions
 
 * What are the supported EF Core versions?
-  * EF Core 8, 9 and 10 are supported. Future versions should work too.
+  * For version 1.0.0, EF Core 8, 9 and 10 are supported.
+  * For version 2.0.0, EF 10 is supported.
+  * Future versions should work too.
 
 * Why is this package required? Why doesn't EF Core take care of throwing a proper `OperationCanceledException`?
   * EF Core [distinguishes cancelation from failure](https://github.com/dotnet/efcore/pull/26988), but only for logging purposes. A maintainer of EF Core [said this](https://github.com/dotnet/SqlClient/issues/26#issuecomment-1598942832):

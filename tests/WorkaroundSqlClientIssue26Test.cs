@@ -9,7 +9,10 @@ using Xunit;
 
 namespace WorkaroundSqlClientIssue26.Tests;
 
-public class WorkaroundSqlClientIssue26Test(ITestOutputHelper output, MsSqlFixture fixture) : IClassFixture<MsSqlFixture>
+[SuppressMessage("ReSharper", "StaticMemberInGenericType")]
+public abstract class WorkaroundSqlClientIssue26Test<TBuilder, TFixture>(ITestOutputHelper output, TFixture fixture) : IClassFixture<TFixture>
+    where TFixture : MsSqlFixture<TBuilder>
+    where TBuilder : SqlEngineDbContextOptionsBuilderBase<TBuilder>
 {
     private static readonly Type[] ExpectedSqlClientErroneousCancellationExceptionTypes = [typeof(TaskCanceledException), typeof(SqlException), typeof(InvalidOperationException)];
 
@@ -27,7 +30,7 @@ public class WorkaroundSqlClientIssue26Test(ITestOutputHelper output, MsSqlFixtu
 
     [Theory, MemberData(nameof(TestData))]
     public async Task TestRetryOnFailureAndWorkaround(string cancellationMessage)
-        => await ExecuteTestAsync(cancellationMessage, sql => sql.EnableRetryOnFailure().WorkAroundSqlClientIssue26());
+        => await ExecuteTestAsync(cancellationMessage, sql => EnableRetryOnFailure(sql).WorkAroundSqlClientIssue26());
 
     [Theory, MemberData(nameof(TestData))]
     public async Task TestRecordRetryOnFailureAndWorkaround(string cancellationMessage)
@@ -44,12 +47,12 @@ public class WorkaroundSqlClientIssue26Test(ITestOutputHelper output, MsSqlFixtu
         }
     }
 
-    private async Task ExecuteTestAsync(string cancellationMessage, Action<SqlServerDbContextOptionsBuilder> sqlServerOptionsAction)
+    private async Task ExecuteTestAsync(string cancellationMessage, Action<SqlEngineDbContextOptionsBuilderBase<TBuilder>> optionsAction)
     {
         using var cancellationEventListener = new CancellationEventListener(output, cancellationMessage);
         var cancellationToken = cancellationEventListener.CancellationToken;
 
-        await using var context = fixture.CreateChinookContext(output, sqlServerOptionsAction);
+        await using var context = fixture.CreateChinookContext(output, optionsAction);
 
         var exception = await Record.ExceptionAsync(() => context.Tracks.CountAsync(cancellationToken));
 
@@ -67,4 +70,27 @@ public class WorkaroundSqlClientIssue26Test(ITestOutputHelper output, MsSqlFixtu
             Assert.Contains(exception.InnerException.GetType(), ExpectedSqlClientErroneousCancellationExceptionTypes);
         }
     }
+
+    protected abstract SqlEngineDbContextOptionsBuilderBase<TBuilder> EnableRetryOnFailure(SqlEngineDbContextOptionsBuilderBase<TBuilder> builder);
+}
+
+public class SqlServer(ITestOutputHelper output, MsSqlFixture<SqlServerDbContextOptionsBuilder>.SqlServer fixture)
+    : WorkaroundSqlClientIssue26Test<SqlServerDbContextOptionsBuilder, MsSqlFixture<SqlServerDbContextOptionsBuilder>.SqlServer>(output, fixture)
+{
+    protected override SqlEngineDbContextOptionsBuilderBase<SqlServerDbContextOptionsBuilder> EnableRetryOnFailure(SqlEngineDbContextOptionsBuilderBase<SqlServerDbContextOptionsBuilder> builder)
+        => ((SqlServerDbContextOptionsBuilder)builder).EnableRetryOnFailure();
+}
+
+public class AzureSql(ITestOutputHelper output, MsSqlFixture<AzureSqlDbContextOptionsBuilder>.AzureSql fixture)
+    : WorkaroundSqlClientIssue26Test<AzureSqlDbContextOptionsBuilder, MsSqlFixture<AzureSqlDbContextOptionsBuilder>.AzureSql>(output, fixture)
+{
+    protected override SqlEngineDbContextOptionsBuilderBase<AzureSqlDbContextOptionsBuilder> EnableRetryOnFailure(SqlEngineDbContextOptionsBuilderBase<AzureSqlDbContextOptionsBuilder> builder)
+        => ((AzureSqlDbContextOptionsBuilder)builder).EnableRetryOnFailure();
+}
+
+public class AzureSynapse(ITestOutputHelper output, MsSqlFixture<AzureSynapseDbContextOptionsBuilder>.AzureSynapse fixture)
+    : WorkaroundSqlClientIssue26Test<AzureSynapseDbContextOptionsBuilder, MsSqlFixture<AzureSynapseDbContextOptionsBuilder>.AzureSynapse>(output, fixture)
+{
+    protected override SqlEngineDbContextOptionsBuilderBase<AzureSynapseDbContextOptionsBuilder> EnableRetryOnFailure(SqlEngineDbContextOptionsBuilderBase<AzureSynapseDbContextOptionsBuilder> builder)
+        => ((AzureSynapseDbContextOptionsBuilder)builder).EnableRetryOnFailure();
 }
