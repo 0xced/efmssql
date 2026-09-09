@@ -26,7 +26,7 @@
        See https://docs.microsoft.com/en-us/dotnet/fundamentals/package-validation/overview for more information -->
   <PropertyGroup Label="API Validation">
     <EnablePackageValidation>true</EnablePackageValidation>
-    <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>2.0.0</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <PropertyGroup Label="Packaging Metadata">
