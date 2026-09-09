@@ -55,12 +55,14 @@ var options = new DbContextOptionsBuilder<MyDbContext>()
 
 * What are the supported EF Core versions?
   * For version 1.0.0, EF Core 8, 9 and 10 are supported.
-  * For version 2.0.0, EF 10 is supported.
+  * For version 2.0.0, EF Core 10 is supported.
   * Future versions should work too.
+
 
 * Why is this package required? Why doesn't EF Core take care of throwing a proper `OperationCanceledException`?
   * EF Core [distinguishes cancelation from failure](https://github.com/dotnet/efcore/pull/26988), but only for logging purposes. A maintainer of EF Core [said this](https://github.com/dotnet/SqlClient/issues/26#issuecomment-1598942832):
     > EF makes no attempt to correct SqlClient's behavior here by throwing a different type of exception; it just distinguishes between failure and cancellation.
-  
+
+
 * What happens if the original issue gets fixed?
   * If SqlClient issue #26 is fixed, this workaround will turn into a no-op.
